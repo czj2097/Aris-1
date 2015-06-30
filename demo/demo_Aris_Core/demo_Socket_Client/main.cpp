@@ -149,8 +149,26 @@ int main()
 		});
 
 		/*连接服务器*/
-		VisualSystem.Connect(RemoteIp, "5688");
-		ControlSystem.Connect(RemoteIp, "5689");
+		
+		Aris::Core::log("before connect");
+		try
+		{
+			VisualSystem.Connect(RemoteIp, "5688");
+			ControlSystem.Connect(RemoteIp, "5689");
+		}
+		catch (std::logic_error &e)
+		{
+			cout << e.what();
+			exit(0);
+		}
+		Aris::Core::log("after connect");
+
+
+		Aris::Core::MSG ret = ControlSystem.SendRequest(Aris::Core::MSG());
+		
+		cout << (char*)ret.GetDataAddress() << endl;
+
+		
 
 
 		/*开始消息循环*/
@@ -164,7 +182,4 @@ int main()
 	//_CrtDumpMemoryLeaks();
 #endif
 	
-	int a;
-	cin >> a;
-
 }

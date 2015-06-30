@@ -20,10 +20,13 @@ int show(const Aris::Core::MSG &msg)
 	return 0;
 }
 
+using namespace Aris::Core;
 
 int main()
 {
 	Aris::Core::MSG m1, m2;
+	
+	cout << log("first log") << endl;
 
 
 	m1.SetLength(10);
@@ -32,7 +35,7 @@ int main()
 
 	m1.SetLength(12);
 
-	
+
 
 
 	m1.SetMsgID(101);
@@ -50,12 +53,13 @@ int main()
 
 	show(m3);
 
-
-
-
-
-
-
+	Aris::Core::RT_MSG::instance[0].CopyMore("rt msg123", 10);
+	Aris::Core::RT_MSG::instance[0].CopyMore("rt msg123", 10);
+	Aris::Core::RT_MSG::instance[1].CopyMore("98765", 6);
+	cout << (char *)Aris::Core::RT_MSG::instance[0].GetDataAddress() << endl;
+	cout << (char *)Aris::Core::RT_MSG::instance[1].GetDataAddress() << endl;
+	cout << Aris::Core::RT_MSG::instance[0].GetLength()<<endl;
+	cout << Aris::Core::RT_MSG::instance[1].GetLength() << endl;
 
 	int i;
 	cin >> i;

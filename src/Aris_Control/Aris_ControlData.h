@@ -158,110 +158,16 @@ namespace Aris
                 //sensor data
                 CForceData forceData[FORCE_SENSOR_NUMBER];
         };
-
-        /*
-         * Reimplementation of the XDDP communication after discussion
-         * One cycle, only one update of the buffer
-         * RT_CONN_DATA class needed
-         *
-         * RT side: update buffer at cycle begin
-         *
-         */
-
-        /*
-         * RT_MSG related settings
-         */
-#define RT_MSG_BUFFER_SIZE 8192
-#define RT_MSG_HEADER_LENGTH MSG_HEADER_LENGTH
-#define PRINT_INFO_BUFFER_SIZE 200
-        class RT_MSG
-        {
-            friend class ::CSysBase;
-            friend class Aris::RT_CONTROL::ACTUATION;
-            public:
-
-            static const int INVALID_MSG_ID = -100;
-
-            RT_MSG();
-            ~RT_MSG();
-
-            bool isMessageValid(){return GetMsgID() == INVALID_MSG_ID;};
-            void operator=(const RT_MSG& other);
-            void SetLength(unsigned int dataLength);
-            void SetMsgID(int msgID);
-
-            unsigned int GetLength() const;
-            int GetMsgID() const;
-            char* GetDataAddress() const;
-
-            /** \brief 从fromThisMemory指针中拷贝dataLength长度的数据，在拷贝完之后，MSG的长度自动设置为dataLength。
-             * \param fromThisMemory    待拷贝的内存地址。
-             * \param dataLength        数据长度
-             *
-             */
-            void Copy(const void * fromThisMemory, const unsigned int dataLength);
-            /** \brief 从fromThisMemory指针中拷贝MSG.GetLength()大小的数据。
-             * \param fromThisMemory    待拷贝的内存地址。
-             *
-             */
-            void Copy(const void * fromThisMemory);
-            /** \brief 从fromThisMemory指针中拷贝MSG.GetLength()大小的数据到MSG内存中的指定地点。
-             * \param fromThisMemory       待拷贝的内存地址。
-             * \param dataLength           数据长度
-             * \param atThisPositionInMsg  将数据拷贝到MSG.GetDataAddress()[atThisPositionInMsg]处。
-             */
-            void CopyAt(const void * fromThisMemory, const unsigned int dataLength, const unsigned int atThisPositionInMsg);
-            /** \brief 从fromThisMemory指针中拷贝dataLength长度的数据，这些数据添加到自身的尾部，在拷贝完之后，MSG的长度自动增加dataLength。
-             * \param fromThisMemory    目标内存地址。
-             *
-             */
-            void CopyMore(const void * fromThisMemory, const unsigned int dataLength);
-
-            /** \brief 向toThisMemory指针中粘贴dataLength长度的数据，若dataLength大于自身的数据长度，则只拷贝自身长度的内存。
-             * \param fromThisMemory    目标内存地址。
-             * \param dataLength        数据长度
-             *
-             */
-            void Paste(void * toThisMemory,const unsigned int dataLength);
-            /** \brief 向toThisMemory指针中粘贴MSG.GetLength()长度的数据。
-             * \param fromThisMemory    目标内存地址。
-             *
-             */
-            void Paste(void * toThisMemory);
-            /** \brief 向toThisMemory指针中粘贴dataLength长度的数据，若dataLength大于自身的数据长度，则只拷贝自身长度的内存。
-             * \param fromThisMemory    目标内存地址。
-             * \param dataLength        数据长度
-             *
-             */
-            void PasteAt(void * toThisMemory,const unsigned int dataLength,const unsigned int atThisPositionInMsg);
-
-
-
-            // in RT we only have twos object of this class, and we need to SetBuffer once for each object.
-            // two objects: m_dataRecv m_dataSend
-            //void SetBuffer(char* p_ptrBuffer);
-
-            //used in send data
-            //void SetData(const unsigned int p_dataLength = 0, const int p_dataType = 0, const void *p_src = 0);
-            //used in receive data,
-            //int GetData();
-            private:
-            void SetType(long long message);
-            long long GetType() const;
-
-            //	int *m_ptrDataType;// address will be setup in SetBuffer
-            //	int *m_ptrDataLength;// address will be setup in SetBuffer
-            char *m_ptrData;// assign to whatever buffer you want to use.
-        };
-
+#define RT_MSG_BUFFER_SIZE  8192
+#define RT_MSG_HEADER_LENGTH   MSG_HEADER_LENGTH
+#define PRINT_INFO_BUFFER_SIZE  200
     }
-
 }
 
 /*
  * Function pointer with peculiar parameters
  */
-typedef int (*FuncPtrWork)(Aris::RT_CONTROL::CMachineData&, Aris::RT_CONTROL::RT_MSG&, Aris::RT_CONTROL::RT_MSG&);
+typedef int (*FuncPtrWork)(Aris::RT_CONTROL::CMachineData&, Aris::Core::RT_MSG&,Aris::Core::RT_MSG&);
 typedef int (*FuncPtrInit)(Aris::RT_CONTROL::CSysInitParameters&);
 typedef int (*FuncPtrState)(void*);
 typedef int (*FuncPtrCustom)(Aris::Core::MSG&);
