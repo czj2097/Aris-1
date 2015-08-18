@@ -51,7 +51,7 @@ set(LIBRARY_OUTPUT_PATH lib)
 
 # set compile options
 if(UNIX)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2")
 endif(UNIX)
 
 # set dependency include folder
@@ -83,7 +83,7 @@ link_directories(C:/lapack/lib)
 endif(WIN32)
 
 # Aris_Core project
-set(SOURCE Aris_Socket Aris_Core Aris_Thread tinyxml2 Aris_Message Aris_XML)
+set(SOURCE Aris_Socket Aris_Core tinyxml2 Aris_Message Aris_XML)
 PREPEND_CPP(FULL_SRC src/Aris_Core ${SOURCE})
 PREPEND_H(FULL_H src/Aris_Core ${SOURCE})
 add_library(Aris_Core STATIC ${FULL_SRC} ${FULL_H})
@@ -97,7 +97,7 @@ add_library(Aris_ExpCal STATIC ${FULL_SRC} ${FULL_H})
 set(INCLUDE_HEADER_FILES ${INCLUDE_HEADER_FILES} ${FULL_H})
 
 # Aris_DynKer project
-set(SOURCE Aris_DynKer)
+set(SOURCE Aris_DynKer Aris_DynModel)
 PREPEND_CPP(FULL_SRC src/Aris_DynKer ${SOURCE})
 PREPEND_H(FULL_H src/Aris_DynKer ${SOURCE})
 add_library(Aris_DynKer STATIC ${FULL_SRC} ${FULL_H})
@@ -181,6 +181,7 @@ if(UNIX)
 endif(UNIX)
 if(WIN32)
 	set(CMAKE_INSTALL_PREFIX "C:/Aris")
+	set(INCLUDE_HEADER_FILES ${INCLUDE_HEADER_FILES} src/Aris_Control/Aris_ControlData.h)
 endif(WIN32)
 
 

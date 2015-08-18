@@ -8,20 +8,31 @@
 #ifndef ARIS_CONTROLDATA_H_
 #define ARIS_CONTROLDATA_H_
 #include "Aris_Core.h"
+//#include "GlobalConfiguration.h"
 
 #define FORCE_SENSOR_NUMBER  1
 #define AXIS_NUMBER 18
 
-extern char ServoStateName[7][20];
+#define FREQUENCY_MAIN  25
+#define FREQUENCY_CORE  1000
 
-class CSysBase;
+#define NSEC_PER_SEC (1000000000L)
+#define PERIOD_NS_MAIN (NSEC_PER_SEC * 1.0 / FREQUENCY_MAIN)
+#define PERIOD_NS_CORE (NSEC_PER_SEC * 1.0 / FREQUENCY_CORE)
+
+constexpr static int ACTUAL_MOTOR_NUMBER=18;
+
+constexpr int period_ns_core()
+{
+    return static_cast<int>(1000000000 * 1.0 /1000);
+}
+
+extern char ServoStateName[7][20];
 
 namespace Aris
 {
     namespace RT_CONTROL
     {
-        class ACTUATION;
-
         enum EServoState
         {
             EMSTAT_NONE=0,
@@ -35,16 +46,13 @@ namespace Aris
             EMSTAT_EMERGE,
         };
         const int N_MOTOR_STATE=9;
-
-        enum EOperationMode
-        {
-            OM_INVALID     = -1,
-            //OM_PROFILEPOS = 1,
-            OM_CYCLICPOS  = 8,
-            OM_CYCLICVEL  = 9,
-            OM_CYCLICTORQ = 10,
-            //  OM_OTHER      = 18
-        };
+            enum EOperationMode
+            {
+                OM_INVALID     = -1,
+                OM_CYCLICPOS  = 8,
+                OM_CYCLICVEL  = 9,
+                OM_CYCLICTORQ = 10,
+            };
 
         enum EOperationModeDisplay
         {
@@ -76,7 +84,6 @@ namespace Aris
             CM_CUS_MESSAGE,
             CM_NONE,
         };
-
         enum EMachineState
         {
             CS_UNINITED,
@@ -84,29 +91,6 @@ namespace Aris
             CS_COMM_INITED,
             CS_RTTASK_STARTED,
             CS_STOPPED,
-        };
-
-        /*
-         * CSysInitParameters should be used by SetSysInitializer
-         */
-        class CSysInitParameters
-        {
-
-            public:
-                CSysInitParameters();
-                ~CSysInitParameters();
-                //	CSysInitParameters& operator=(const CSysInitParameters& other);
-                int motorNum;
-                int homeMode;
-                int homeAccel;
-                int homeLowSpeed;
-                int homeHighSpeed;
-                int p2pMaxSpeed;
-                int p2pSpeed;
-                int nsPerCyclePeriod;
-                int homeTorqueLimit;
-                int* homeOffsets;
-                int* driverIDs;
         };
 
         /*
@@ -120,34 +104,37 @@ namespace Aris
                 int isZeroingRequest;
         };
 
-        /*
-         * CMotorData struct contain one single motor's data, used by CMachineData
-         */
-        class CMotorData
+        struct CSysInitParameters
         {
             public:
-                CMotorData& operator=(const CMotorData& other);
-                int Position;
-                int Velocity;
-                int Torque;
+                   int motorNum{ACTUAL_MOTOR_NUMBER};
+                   int homeMode{17};
+                   int homeAccel{25600};
+                   int homeLowSpeed{256};
+                   int homeHighSpeed{2560};
+                   int p2pMaxSpeed{2560};
+                   int p2pSpeed{1792};
+                   int nsPerCyclePeriod{period_ns_core()};
+                   int homeTorqueLimit{1000};
+                   int* homeOffsets{nullptr};
+                   int* driverIDs{nullptr};
         };
-        /*
-         * CWorkData struct should be used by TrajectoryGenerator and Logger as Input Data
-         *
-         * may include sensor data, and other data
-         *
-         */
-
-        class CMachineData
+        
+        struct CMotorData
+        {
+            public:
+                   int Position;
+                   int Velocity;
+                   int Torque;
+        };
+    
+        struct CMachineData
         {
             public:
                 int motorNum;
                 EMachineState machinestate;
-
                 long long int time;
                 //Motor Data
-                CMachineData& operator=(const CMachineData& other);
-
                 bool isMotorHomed[AXIS_NUMBER];
                 EServoState motorsStates[AXIS_NUMBER];
                 EServoCommand motorsCommands[AXIS_NUMBER];
@@ -172,88 +159,9 @@ namespace Aris
          * RT_MSG related settings
          */
 #define RT_MSG_BUFFER_SIZE 8192
-#define RT_MSG_HEADER_LENGTH MSG_HEADER_LENGTH
+#define RT_MSG_HEADER_LENGTH sizeof(Aris::Core::MSG_HEADER)
 #define PRINT_INFO_BUFFER_SIZE 200
-        class RT_MSG
-        {
-            friend class ::CSysBase;
-            friend class Aris::RT_CONTROL::ACTUATION;
-            public:
-
-            static const int INVALID_MSG_ID = -100;
-
-            RT_MSG();
-            ~RT_MSG();
-
-            bool isMessageValid(){return GetMsgID() == INVALID_MSG_ID;};
-            void operator=(const RT_MSG& other);
-            void SetLength(unsigned int dataLength);
-            void SetMsgID(int msgID);
-
-            unsigned int GetLength() const;
-            int GetMsgID() const;
-            char* GetDataAddress() const;
-
-            /** \brief 从fromThisMemory指针中拷贝dataLength长度的数据，在拷贝完之后，MSG的长度自动设置为dataLength。
-             * \param fromThisMemory    待拷贝的内存地址。
-             * \param dataLength        数据长度
-             *
-             */
-            void Copy(const void * fromThisMemory, const unsigned int dataLength);
-            /** \brief 从fromThisMemory指针中拷贝MSG.GetLength()大小的数据。
-             * \param fromThisMemory    待拷贝的内存地址。
-             *
-             */
-            void Copy(const void * fromThisMemory);
-            /** \brief 从fromThisMemory指针中拷贝MSG.GetLength()大小的数据到MSG内存中的指定地点。
-             * \param fromThisMemory       待拷贝的内存地址。
-             * \param dataLength           数据长度
-             * \param atThisPositionInMsg  将数据拷贝到MSG.GetDataAddress()[atThisPositionInMsg]处。
-             */
-            void CopyAt(const void * fromThisMemory, const unsigned int dataLength, const unsigned int atThisPositionInMsg);
-            /** \brief 从fromThisMemory指针中拷贝dataLength长度的数据，这些数据添加到自身的尾部，在拷贝完之后，MSG的长度自动增加dataLength。
-             * \param fromThisMemory    目标内存地址。
-             *
-             */
-            void CopyMore(const void * fromThisMemory, const unsigned int dataLength);
-
-            /** \brief 向toThisMemory指针中粘贴dataLength长度的数据，若dataLength大于自身的数据长度，则只拷贝自身长度的内存。
-             * \param fromThisMemory    目标内存地址。
-             * \param dataLength        数据长度
-             *
-             */
-            void Paste(void * toThisMemory,const unsigned int dataLength);
-            /** \brief 向toThisMemory指针中粘贴MSG.GetLength()长度的数据。
-             * \param fromThisMemory    目标内存地址。
-             *
-             */
-            void Paste(void * toThisMemory);
-            /** \brief 向toThisMemory指针中粘贴dataLength长度的数据，若dataLength大于自身的数据长度，则只拷贝自身长度的内存。
-             * \param fromThisMemory    目标内存地址。
-             * \param dataLength        数据长度
-             *
-             */
-            void PasteAt(void * toThisMemory,const unsigned int dataLength,const unsigned int atThisPositionInMsg);
-
-
-
-            // in RT we only have twos object of this class, and we need to SetBuffer once for each object.
-            // two objects: m_dataRecv m_dataSend
-            //void SetBuffer(char* p_ptrBuffer);
-
-            //used in send data
-            //void SetData(const unsigned int p_dataLength = 0, const int p_dataType = 0, const void *p_src = 0);
-            //used in receive data,
-            //int GetData();
-            private:
-            void SetType(long long message);
-            long long GetType() const;
-
-            //	int *m_ptrDataType;// address will be setup in SetBuffer
-            //	int *m_ptrDataLength;// address will be setup in SetBuffer
-            char *m_ptrData;// assign to whatever buffer you want to use.
-        };
-
+        
     }
 
 }
@@ -261,7 +169,7 @@ namespace Aris
 /*
  * Function pointer with peculiar parameters
  */
-typedef int (*FuncPtrWork)(Aris::RT_CONTROL::CMachineData&, Aris::RT_CONTROL::RT_MSG&, Aris::RT_CONTROL::RT_MSG&);
+typedef int (*FuncPtrWork)(Aris::RT_CONTROL::CMachineData&, Aris::Core::RT_MSG&,Aris::Core::RT_MSG&);
 typedef int (*FuncPtrInit)(Aris::RT_CONTROL::CSysInitParameters&);
 typedef int (*FuncPtrState)(void*);
 typedef int (*FuncPtrCustom)(Aris::Core::MSG&);

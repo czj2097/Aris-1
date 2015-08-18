@@ -25,6 +25,8 @@ using namespace std;
 
 /*以下用于VS内存泄露检测*/
 #ifdef PLATFORM_IS_WINDOWS  
+#include <Windows.h>
+
 #define CRTDBG_MAP_ALLOC  
 #include <stdlib.h>  
 #include <crtdbg.h>  
@@ -45,7 +47,6 @@ int main()
 	//_CrtSetBreakAlloc(203);
 #endif
 
-	
 	/*内存检测泄露完毕*/
 	{	
 		/*注册所有的消息函数*/
@@ -122,7 +123,7 @@ int main()
 		});
 
 		/*设置所有CONN类型的回调函数*/
-		VisualSystem.SetCallBackOnReceivedConnection([](Aris::Core::CONN *pConn, const char *addr, int port)
+		VisualSystem.SetOnReceivedConnection([](Aris::Core::CONN *pConn, const char *addr, int port)
 		{
 			Aris::Core::MSG msg;
 
@@ -134,18 +135,19 @@ int main()
 
 			return 0;
 		});
-		VisualSystem.SetCallBackOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &msg)
+		VisualSystem.SetOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &msg)
 		{
 			msg.SetMsgID(VisualSystemDataReceived);
 			Aris::Core::PostMsg(msg);
 			return 0;
 		});
-		VisualSystem.SetCallBackOnLoseConnection([](Aris::Core::CONN *pConn)
+		VisualSystem.SetOnLoseConnection([](Aris::Core::CONN *pConn)
 		{
 			cout << "Vision system connection lost" << endl;
-			return pConn->StartServer("5688");
+			pConn->StartServer("5688");
+			return 0;
 		});
-		ControlSystem.SetCallBackOnReceivedConnection([](Aris::Core::CONN *pConn, const char *addr, int port)
+		ControlSystem.SetOnReceivedConnection([](Aris::Core::CONN *pConn, const char *addr, int port)
 		{
 			Aris::Core::MSG msg;
 			
@@ -157,18 +159,36 @@ int main()
 
 			return 0;
 		});
-		ControlSystem.SetCallBackOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &msg)
+		ControlSystem.SetOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &msg)
 		{
 			msg.SetMsgID(ControlTrajectoryFinished);
 			Aris::Core::PostMsg(msg);
 			return 0;
 		});
-		ControlSystem.SetCallBackOnLoseConnection([](Aris::Core::CONN *pConn)
+		ControlSystem.SetOnLoseConnection([](Aris::Core::CONN *pConn)
 		{
 			cout << "Control system connection lost" << endl;
-			return pConn->StartServer("5689");
+			pConn->StartServer("5689");
+			return 0;
 		});
 		
+		ControlSystem.SetOnReceiveRequest([](Aris::Core::CONN *pConn,Aris::Core::MSG)
+		{
+			cout << "received request" << endl;
+#ifdef PLATFORM_IS_LINUX  
+			usleep(1000000);
+#endif
+#ifdef PLATFORM_IS_WINDOWS  
+			Sleep(1000);
+#endif
+			
+
+			Aris::Core::MSG m;
+			m.Copy("12345");
+
+			return m;
+		});
+
 		/*打开客户端*/
 		VisualSystem.StartServer("5688");
 		ControlSystem.StartServer("5689");

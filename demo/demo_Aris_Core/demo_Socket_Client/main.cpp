@@ -116,25 +116,25 @@ int main()
 		});
 
 		/*设置所有CONN类型的回调函数*/
-		VisualSystem.SetCallBackOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &data)
+		VisualSystem.SetOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &data)
 		{
 			Aris::Core::PostMsg(Aris::Core::MSG(VisualSystemDataNeeded));
 
 			return 0;
 		});
-		VisualSystem.SetCallBackOnLoseConnection([](Aris::Core::CONN *pConn)
+		VisualSystem.SetOnLoseConnection([](Aris::Core::CONN *pConn)
 		{
 			PostMsg(Aris::Core::MSG(VisualSystemLost));
 
 			return 0;
 		});
-		ControlSystem.SetCallBackOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &data)
+		ControlSystem.SetOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &data)
 		{
 			Aris::Core::PostMsg(Aris::Core::MSG(ControlCommandReceived));
 
 			return 0;
 		});
-		ControlSystem.SetCallBackOnLoseConnection([](Aris::Core::CONN *pConn)
+		ControlSystem.SetOnLoseConnection([](Aris::Core::CONN *pConn)
 		{
 			PostMsg(Aris::Core::MSG(ControlSystemLost));
 
@@ -142,15 +142,33 @@ int main()
 		});
 
 		/*以下使用lambda函数做回调*/
-		VisualSystem.SetCallBackOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &data)
+		VisualSystem.SetOnReceivedData([](Aris::Core::CONN *pConn, Aris::Core::MSG &data)
 		{
 			Aris::Core::PostMsg(Aris::Core::MSG(VisualSystemDataNeeded));
 			return 0;
 		});
 
 		/*连接服务器*/
-		VisualSystem.Connect(RemoteIp, "5688");
-		ControlSystem.Connect(RemoteIp, "5689");
+		
+		Aris::Core::log("before connect");
+		try
+		{
+			VisualSystem.Connect(RemoteIp, "5688");
+			ControlSystem.Connect(RemoteIp, "5689");
+		}
+		catch (std::logic_error &e)
+		{
+			cout << e.what();
+			exit(0);
+		}
+		Aris::Core::log("after connect");
+
+
+		Aris::Core::MSG ret = ControlSystem.SendRequest(Aris::Core::MSG());
+		
+		cout << (char*)ret.GetDataAddress() << endl;
+
+		
 
 
 		/*开始消息循环*/
@@ -164,7 +182,4 @@ int main()
 	//_CrtDumpMemoryLeaks();
 #endif
 	
-	int a;
-	cin >> a;
-
 }

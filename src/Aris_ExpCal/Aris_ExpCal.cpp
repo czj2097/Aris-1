@@ -3,6 +3,9 @@
 #include <exception>
 #include <stdexcept>
 #include <cstring>
+#include <algorithm>
+
+using namespace std;
 
 #include "Aris_ExpCal.h"
 
@@ -15,53 +18,33 @@ namespace Aris
 			, n(0)
 			, isRowMajor(true)
 			, pData(nullptr)
-		{}
+		{
+		}
 		MATRIX::MATRIX(const MATRIX &other)
 			: m(other.m)
 			, n(other.n)
 			, isRowMajor(other.isRowMajor)
-			, pData(nullptr)
+			, pData(m*n > 0 ? new double[m*n]: nullptr)
 		{
-			if (m*n > 0)
-			{
-				pData = new double[m*n];
-				memcpy(pData, other.pData, m*n*sizeof(double));
-			}
+			memcpy(pData, other.pData, m*n*sizeof(double));
 		}
 		MATRIX::MATRIX(MATRIX &&other)
-			: m(other.m)
-			, n(other.n)
-			, isRowMajor(other.isRowMajor)
-			, pData(other.pData)
+			:MATRIX()
 		{
-			other.pData = nullptr;
-			other.m = 0;
-			other.n = 0;
+			this->Swap(other);
 		}
-		MATRIX::MATRIX(unsigned int m, unsigned int n)
+		MATRIX::MATRIX(int m, int n)
 			: m(m)
 			, n(n)
 			, isRowMajor(true)
-			, pData(nullptr)
+			, pData(m*n > 0 ? new double[m*n] : nullptr)
 		{
-			if (m*n > 0)
-			{
-				pData = new double[m*n];
-			}
 		}
-		MATRIX::MATRIX(unsigned int m, unsigned int n, const double *Data)
-			: m(m)
-			, n(n)
-			, isRowMajor(true)
-			, pData(nullptr)
+		MATRIX::MATRIX(int m, int n, const double *Data)
+			: MATRIX(m,n)
 		{
-			if (m*n > 0)
-			{
-				pData = new double[m*n];
-
-				if (Data!=nullptr)
-					memcpy(pData, Data, m*n*sizeof(double));
-			}
+			if ((m*n>0) && (Data != nullptr))
+				memcpy(pData, Data, m*n*sizeof(double));
 		}
 
 		MATRIX::MATRIX(double value)
@@ -88,46 +71,26 @@ namespace Aris
 			(*this) = Aris::DynKer::CombineMatrices<decltype(matrices)>(matrices);
 		}
 
-		MATRIX &MATRIX::operator=(const MATRIX &other)
+		MATRIX &MATRIX::operator=(MATRIX other)
 		{
-			m = other.m;
-			n = other.n;
-			isRowMajor = other.isRowMajor;
-
-			double *pOld = pData;
-			if (other.m*other.n > 0)
-			{
-				pData = new double[other.m*other.n];
-				memcpy(pData, other.pData, m*n*sizeof(double));
-			}
-			else
-			{
-				pData = nullptr;
-			}
-
-			if (pOld != nullptr)
-				delete[]pOld;
-
-			return *this;
-		}
-		MATRIX &MATRIX::operator=(MATRIX &&other)
-		{
-			m = other.m;
-			n = other.n;
-			isRowMajor = other.isRowMajor;
-
-			pData = other.pData;
-			other.pData = nullptr;
-
+			this->Swap(other);
 			return *this;
 		}
 		MATRIX::~MATRIX()
 		{
-			if (pData != nullptr)
-				delete[]pData;
+			delete[]pData;
+		}
+		MATRIX &MATRIX::Swap(MATRIX &other)
+		{
+			std::swap(this->m, other.m);
+			std::swap(this->n, other.n);
+			std::swap(this->isRowMajor, other.isRowMajor);
+			std::swap(this->pData, other.pData);
+
+			return *this;
 		}
 
-		void MATRIX::Resize(unsigned int i, unsigned int j)
+		void MATRIX::Resize(int i, int j)
 		{
 			m = i;
 			n = j;
@@ -137,16 +100,16 @@ namespace Aris
 
 			pData = new double[i*j];
 		}
-		void MATRIX::CopySubMatrixTo(const MATRIX &subMat, unsigned beginRow, unsigned beginCol, unsigned rowNum, unsigned colNum)
+		void MATRIX::CopySubMatrixTo(const MATRIX &subMat, int beginRow, int beginCol, int rowNum, int colNum)
 		{
 			if ((beginRow + subMat.m > m) || (beginCol + subMat.n > n))
 			{
 				throw std::logic_error("Function CopySubMatrixTo must have subMat smaller than self matrix");
 			}
 
-			for (unsigned i = 0; i < subMat.m; ++i)
+			for (int i = 0; i < subMat.m; ++i)
 			{
-				for (unsigned j = 0; j < subMat.n; ++j)
+				for (int j = 0; j < subMat.n; ++j)
 				{
 					this->operator()(i + beginRow, j + beginCol)=subMat(i,j);
 				}
@@ -159,9 +122,9 @@ namespace Aris
 			
 			stream.precision(15);
 			stream << "{";
-			for (unsigned i = 0; i < m; ++i)
+			for (int i = 0; i < m; ++i)
 			{
-				for (unsigned j = 0; j < n; ++j)
+				for (int j = 0; j < n; ++j)
 				{
 					stream << this->operator()(i, j);
 					if (j<n - 1)
@@ -531,7 +494,7 @@ namespace Aris
 
 			return nextPlace;
 		}
-		CALCULATOR::TOKENS::iterator CALCULATOR::FindNextEqualLessPrecedenceBinaryOpr(TOKENS::iterator beginToken, TOKENS::iterator endToken, unsigned precedence)
+		CALCULATOR::TOKENS::iterator CALCULATOR::FindNextEqualLessPrecedenceBinaryOpr(TOKENS::iterator beginToken, TOKENS::iterator endToken, int precedence)
 		{
 			auto nextOpr= beginToken;
 
