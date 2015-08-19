@@ -43,6 +43,8 @@ namespace Aris
 		void s_axes2pm(const double *origin, const double *firstAxisPnt, const double *secondAxisPnt, double *pm_out, const char *axesOrder = "xy");
 		void s_pm2ep(const double *pm_in, double *ep_out, const char *EurType="313");
 		void s_ep2pm(const double *ep_in, double *pm_out, const char *EurType="313");
+		void s_pm2ap(const double *pm_in, double *ap_out);
+		void s_ap2pm(const double *ap_in, double *pm_out);
 		void s_tmf(const double *pm_in, double *tm_out);
 		void s_tmv(const double *pm_in, double *tmd_out);
 		void s_cmf(const double *vel_in, double *cm_out);
@@ -178,7 +180,7 @@ namespace Aris
 			int _RowId;
 
 		private:
-			PART(MODEL *pModel
+			explicit PART(MODEL *pModel
 				, const std::string &Name = ""
 				, const double *PrtIm = nullptr
 				, const double *pm = nullptr
@@ -313,7 +315,7 @@ namespace Aris
 			void _Initiate();
 
 		private:
-			JOINT(MODEL *pModel , const std::string &Name = "", JOINT_TYPE Type = ROTATIONAL, MARKER *pMakI = 0, MARKER *pMakJ = 0);
+			explicit JOINT(MODEL *pModel , const std::string &Name = "", JOINT_TYPE Type = ROTATIONAL, MARKER *pMakI = 0, MARKER *pMakJ = 0);
 			
 			JOINT(const JOINT &) = delete;
 			JOINT(JOINT &&) = delete;
@@ -384,7 +386,7 @@ namespace Aris
 			void _Initiate();
 
 		private:
-			MOTION(MODEL *pModel , const std::string &Name = "", MOTION_TYPE type = LINEAR, MOTION_MODE mode = POS_CONTROL, MARKER *pMakI = 0, MARKER *pMakJ = 0);
+			explicit MOTION(MODEL *pModel , const std::string &Name = "", MOTION_TYPE type = LINEAR, MOTION_MODE mode = POS_CONTROL, MARKER *pMakI = 0, MARKER *pMakJ = 0);
 
 			MOTION(const MOTION &) = delete;
 			MOTION(MOTION &&) = delete;
@@ -474,7 +476,7 @@ namespace Aris
 			double _Fce[6];
 
 		private:
-			FORCE(MODEL *pModel = nullptr, const std::string &Name = "", FORCE_TYPE type = BODY2BODY, PART *pPrtI = 0, PART *pPrtJ = 0, MARKER *pMakA = 0, MARKER *pMakP = 0, const double *force = 0);
+			explicit FORCE(MODEL *pModel, const std::string &Name = "", FORCE_TYPE type = BODY2BODY, PART *pPrtI = 0, PART *pPrtJ = 0, MARKER *pMakA = 0, MARKER *pMakP = 0, const double *force = 0);
 			
 			FORCE(const FORCE &) = delete;
 			FORCE(FORCE &&) = delete;
@@ -505,7 +507,7 @@ namespace Aris
 			double Gravity[6];
 
 		private:
-			ENVIRONMENT(MODEL *pModel);
+			explicit ENVIRONMENT(MODEL *pModel);
 			~ENVIRONMENT();
 
 			int ToXMLElement(Aris::Core::ELEMENT *pEle) const;
@@ -553,7 +555,7 @@ namespace Aris
 		public:
 			PART* pGround;
 		public:
-			MODEL(const std::string & Name = "Model");
+			explicit MODEL(const std::string & Name = "Model");
 			~MODEL();
 
 			MODEL(const MODEL &) = delete;
