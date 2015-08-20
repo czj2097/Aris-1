@@ -113,8 +113,6 @@ int Aris::RT_CONTROL::ACTUATION::RT_PostMsg(Aris::Core::RT_MSG &p_data)
     return ret;
 }
 
-
-
 int Aris::RT_CONTROL::ACTUATION::NRT_RecvMsg(Aris::Core::MSG &p_data)
 {
     int ret;
