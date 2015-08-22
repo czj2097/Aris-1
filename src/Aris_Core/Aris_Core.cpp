@@ -183,6 +183,10 @@ namespace Aris
 				return nullptr;
 		}
 
+  char* Core::MSG_BASE::GetHeaderAddress() const
+  {
+   return _pData;
+  }
 		void Core::MSG_BASE::SetType(long long type)
 		{
 			*((long long *)(_pData + 8)) = type;

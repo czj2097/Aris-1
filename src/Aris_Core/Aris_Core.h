@@ -65,6 +65,8 @@ namespace Aris
 			*/
 			char* GetDataAddress() const;
 
+   char* GetHeaderAddress() const;
+
 			void Copy(const char * fromThisMemory);
 			/** \brief 从fromThisMemory指针中拷贝dataLength长度的数据，在拷贝完之后，MSG的长度自动设置为dataLength。
 			* \param fromThisMemory    待拷贝的内存地址。
@@ -140,7 +142,7 @@ namespace Aris
 			*/
 			void PasteAt(void * toThisMemory, unsigned int dataLength, unsigned int atThisPositionInMsg) const;
 
-		protected:
+        protected:
 			void SetType(long long type);
 			long long GetType() const;
 		};
