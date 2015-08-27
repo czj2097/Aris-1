@@ -822,7 +822,7 @@ int CDeviceMaster::Initialize(const Aris::RT_CONTROL::CSysInitParameters p_InitP
 
     for (int i = 0; i < m_forceSensorNum; i++)
     {
-        m_forceSensor[i].SetEtherCATPosition(ECAT_START_POS_ATI_FORCE_SENSOR + i);
+        m_forceSensor[i].SetEtherCATPosition(ECAT_POS_LIST_ATI_FORCE_SENSOR[i]);
     }
 
 
