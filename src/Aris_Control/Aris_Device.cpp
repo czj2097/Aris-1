@@ -423,7 +423,7 @@ int CElmoMotor::DoCommand()
                     rt_printf("going home\n");
                 }
 
-                else if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING)
+                else if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING){
                     if(m_subState==SUB_FINISHED)
                     {
                         m_isHomingFinished=true;
@@ -432,10 +432,12 @@ int CElmoMotor::DoCommand()
                     }
                     else //SUB_READY or SUB_BUSY
                     {
+                        m_isHomingFinished=false;
 
                         // keep going home
                         m_motorCommandData.ControlWord=0x1F;
                     }
+                }
                 //	}
 
                 break;
