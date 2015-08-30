@@ -12,8 +12,8 @@ const Aris::RT_CONTROL::EServoState CElmoMotor::m_stateMachine[Aris::RT_CONTROL:
    Aris::RT_CONTROL::EMSTAT_POWEREDOFF,Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_INVALID, //STA_POWEREDOFF
    Aris::RT_CONTROL::EMSTAT_STOPPED,   Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_INVALID, //STA_STOPPED
    Aris::RT_CONTROL::EMSTAT_ENABLED   ,Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_HOMING, //STA_ENABLED
-   Aris::RT_CONTROL::EMSTAT_RUNNING ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_INVALID,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_HOMING, //STA_RUNNING
-   Aris::RT_CONTROL::EMSTAT_HOMING   , Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_INVALID,Aris::RT_CONTROL::EMSTAT_INVALID,Aris::RT_CONTROL::EMSTAT_HOMING,  //STA_HOMING
+   Aris::RT_CONTROL::EMSTAT_RUNNING ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_HOMING, //STA_RUNNING
+   Aris::RT_CONTROL::EMSTAT_HOMING   , Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_INVALID,Aris::RT_CONTROL::EMSTAT_HOMING,  //STA_HOMING
    Aris::RT_CONTROL::EMSTAT_FAULT   ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_HOMING}; //STA_FAULT
 
  char CElmoMotor::print_poweredoff[PRINT_INFO_BUFFER_SIZE];
@@ -377,8 +377,6 @@ int CElmoMotor::DoCommand()
 
                 m_motorCommandData.ControlWord = 0x06;  // require stop
                 m_motorCommandData.Mode=m_motorCommand.operationMode;
-
-
                 break;
 
             case Aris::RT_CONTROL::EMSTAT_ENABLED:
@@ -388,10 +386,11 @@ int CElmoMotor::DoCommand()
                 {
                     m_motorCommandData.ControlWord = 0x06;  // require STOPPED state firstly
                 }
-                else if( m_currentState == Aris::RT_CONTROL::EMSTAT_STOPPED)
+                else if( m_currentState == Aris::RT_CONTROL::EMSTAT_STOPPED ||
+                         m_currentState == Aris::RT_CONTROL::EMSTAT_RUNNING)
+                {
                     m_motorCommandData.ControlWord = 0x07;  // require ENABLE state
-
-
+                }
                 break;
 
             case Aris::RT_CONTROL::EMSTAT_RUNNING:
@@ -405,8 +404,6 @@ int CElmoMotor::DoCommand()
                 {
                     m_motorCommandData.ControlWord = 0x0F;  // require RUNNING state
                 }
-
-
                 break;
 
             case Aris::RT_CONTROL::EMSTAT_HOMING:
