@@ -120,6 +120,22 @@ namespace Aris
                 int isZeroingRequest;
         };
 
+        class CIMUData
+        {
+            public:
+                float EulerAngle[3];
+                float AngularVel[3];
+                float LinearAcc[3];
+
+                CIMUData()
+                {
+                    for (int i = 0; i < 3; ++i) {
+                        EulerAngle[i] = 0;
+                        AngularVel[i] = 0;
+                        LinearAcc[i]  = 0;
+                    }
+                }
+        };
         /*
          * CMotorData struct contain one single motor's data, used by CMachineData
          */
@@ -155,6 +171,7 @@ namespace Aris
                 CMotorData commandData[AXIS_NUMBER];//lastCommand,collected before write()
                 //sensor data
                 CForceData forceData[FORCE_SENSOR_NUMBER];
+                CIMUData   imuData; // only one can be used at CURRENT STAGE
         };
 #define RT_MSG_BUFFER_SIZE 8192
 #define RT_MSG_HEADER_LENGTH MSG_HEADER_LENGTH
