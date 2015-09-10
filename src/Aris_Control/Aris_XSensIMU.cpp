@@ -137,7 +137,7 @@ int CIMUDevice::UpdateData(CIMUData& imuData)
             for (int i = 0; i < 3; ++i) 
             {
                 imuData.EulerAngle[i] = euler[i] / 180.0 * 3.14159265359;
-                imuData.AngularVel[i] = deltaQ[i] * 100 * 2.0;
+                imuData.AngularVel[i] = deltaQ[i+1] * 100 * 2.0;
                 imuData.LinearAcc[i] = acceleration[i];
             }
         }
