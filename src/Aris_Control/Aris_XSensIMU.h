@@ -28,7 +28,9 @@ namespace Aris{
                 int Initialize();
                 int UpdateData(CIMUData& data);
                 int Sleep(int milliseconds);
+                int Close();
             private:
+                bool m_isDeviceOpened;
                 DeviceClass m_device;
                 XsByteArray m_byteData;
                 XsMessageArray m_msgs;

@@ -4,10 +4,16 @@ using namespace Aris::RT_CONTROL;
 
 CIMUDevice::CIMUDevice()
 {
+    m_isDeviceOpened = false;
 }
 
 CIMUDevice::~CIMUDevice()
 {
+    if (m_isDeviceOpened)
+    {
+        m_device.close();
+        m_isDeviceOpened = false;
+    }
 }
 
 int CIMUDevice::Initialize()
@@ -107,11 +113,16 @@ int CIMUDevice::Initialize()
 
     std::cout << "IMU Initialized" << std::endl;
 
+    m_isDeviceOpened = true;
+
     return 0;
 }
 
 int CIMUDevice::UpdateData(CIMUData& imuData)
 {
+    if (!m_isDeviceOpened)
+        return -1;
+
     m_device.readDataToBuffer(m_byteData);
     m_device.processBufferedData(m_byteData, m_msgs);
     
@@ -152,3 +163,12 @@ int CIMUDevice::Sleep(int milliseconds)
     return 0;
 }
 
+
+int CIMUDevice::Close()
+{
+    if (m_isDeviceOpened)
+    {
+        m_device.close();
+    }
+    return 0;
+}
