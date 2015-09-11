@@ -147,9 +147,14 @@ int CIMUDevice::UpdateData(CIMUData& imuData)
             XsVector acceleration=packet.calibratedAcceleration();
             for (int i = 0; i < 3; ++i) 
             {
-                imuData.EulerAngle[i] = euler[i] / 180.0 * 3.14159265359;
-                imuData.AngularVel[i] = deltaQ[i+1] * 100 * 2.0;
-                imuData.LinearAcc[i] = acceleration[i];
+                if (packet.containsOrientation())
+                    imuData.EulerAngle[i] = euler[i] / 180.0 * 3.14159265359;
+
+                if (packet.containsSdiData())
+                    imuData.AngularVel[i] = deltaQ[i+1] * 100 * 2.0;
+
+                if (packet.containsCalibratedAcceleration())
+                    imuData.LinearAcc[i] = acceleration[i];
             }
         }
     }
