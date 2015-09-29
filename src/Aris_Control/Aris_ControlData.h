@@ -181,6 +181,26 @@ namespace Aris
                 char controlData[CONTROL_DATA_SIZE]; // We offer a space to store possible controller data
         };
 
+        // CURRENT STAGE: Used for resolve old log data, will be deleted in the future
+        class CMachineDataLegacy
+        {
+            const static int CONTROL_DATA_SIZE = 128;
+            public:
+                int motorNum;
+                EMachineState machinestate;
+                long long int time;
+                //Motor Data
+                bool isMotorHomed[AXIS_NUMBER];
+                EServoState motorsStates[AXIS_NUMBER];
+                EServoCommand motorsCommands[AXIS_NUMBER];
+                EOperationMode motorsModes[AXIS_NUMBER];
+                EOperationModeDisplay motorsModesDisplay[AXIS_NUMBER];
+                CMotorData feedbackData[AXIS_NUMBER];//currentFeedback,collected after read()
+                CMotorData commandData[AXIS_NUMBER];//lastCommand,collected before write()
+                //sensor data
+                CForceData forceData[FORCE_SENSOR_NUMBER];
+                CIMUData   imuData; // only one can be used at CURRENT STAGE
+        };
     }
 
 }
