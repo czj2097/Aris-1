@@ -154,8 +154,13 @@ namespace Aris
          *
          */
 
+#define RT_MSG_BUFFER_SIZE 8192
+#define RT_MSG_HEADER_LENGTH MSG_HEADER_LENGTH
+#define PRINT_INFO_BUFFER_SIZE 200
+
         class CMachineData
         {
+            const static int CONTROL_DATA_SIZE = 128;
             public:
                 int motorNum;
                 EMachineState machinestate;
@@ -172,10 +177,9 @@ namespace Aris
                 //sensor data
                 CForceData forceData[FORCE_SENSOR_NUMBER];
                 CIMUData   imuData; // only one can be used at CURRENT STAGE
+                // Controller Data
+                char controlData[CONTROL_DATA_SIZE]; // We offer a space to store possible controller data
         };
-#define RT_MSG_BUFFER_SIZE 8192
-#define RT_MSG_HEADER_LENGTH MSG_HEADER_LENGTH
-#define PRINT_INFO_BUFFER_SIZE 200
 
     }
 

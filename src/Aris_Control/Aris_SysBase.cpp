@@ -93,12 +93,6 @@ int CSysBase::m_xddp_fd_data;
 
 CSysBase::CSysBase()
 {
-    //	CSysBase::m_isCurrentCycleGetData=false;
-    //	CSysBase::m_operationMode=OM_NOMODE;
-    //	CSysBase::m_currentInternCmdRT=CSysBase::EInternCmd::EIC_NONE;
-    //	CSysBase::m_currentInternCmdNRT=CSysBase::EInternCmd::EIC_NONE;
-    //	CSysBase::m_isDataFromRT=false;
-
     for(int i=0;i<ACTUAL_MOTOR_NUMBER;i++)
     {
         CSysBase::m_machineDataCore.motorsCommands[i]=Aris::RT_CONTROL::EServoCommand::EMCMD_NONE;
@@ -107,32 +101,8 @@ CSysBase::CSysBase()
 
     CSysBase::m_machineDataCore.machinestate=Aris::RT_CONTROL::EMachineState::CS_UNINITED;
 
-    //	CSysBase::m_motorStates[0]=m_deviceMaster.m_motors[0].GetMotorState();
-    //	CSysBase::m_motorModes[i]=m_deviceMaster.m_motors[i].GetMotorMode();
-
-
-    //	CSysBase::m_machineCommand=Aris::RT_CONTROL::EServoCommand::EMCMD_NONE;
-    //	CSysBase::m_rawInternCommand=Aris::RT_CONTROL::EServoCommand::EMCMD_NONE;
-
-    //	CSysBase::m_machineState=Aris::RT_CONTROL::EServoState::EMSTAT_INVALID;
-    //	CSysBase::m_machineMode=Aris::RT_CONTROL::EOperationMode::OM_NOMODE;
-
     CSysBase::m_isLog=true;
     CSysBase::m_logCount=0;
-    //	CSysBase::m_isGetCustomDataCurrentCycle=false;
-    //CSysBase::m_isInTrajPhase=CSysBase::m_deviceMaster.m_needSetTrajData;
-
-    //CSysBase::m_isCurrentCycleGetData=false;
-
-    //	CSysBase::m_servoStateNRT=Aris::RT_CONTROL::EServoState::EMSTAT_NONE;
-    //	CSysBase::m_currentStateRT=Aris::RT_CONTROL::EServoState::EMSTAT_NONE;
-    //	CSysBase::m_nextStateRT=Aris::RT_CONTROL::EServoState::EMSTAT_NONE;
-
-    //  change it after start
-    //	CSysBase::m_isLog=true;
-    //	CSysBase::m_logCount=0;
-    //	CSysBase::m_isGetCustomDataCurrentCycle=false;
-    //	CSysBase::H2RedClear();
 };
 
 CSysBase::~CSysBase()
@@ -162,28 +132,10 @@ int CSysBase::SysInit(Aris::RT_CONTROL::CSysInitParameters p_Param)
     PrintInfo(CSysBase::print_SYSTEM_INITIALIZING);
     //backup sysInitParam
     CSysBase::m_sysInitParam = p_Param;
-    //CSysBase::m_sysInitParam.motorNum = p_Param.motorNum;
-    //CSysBase::m_sysInitParam.homeMode = p_Param.homeMode;
-    //CSysBase::m_sysInitParam.nsPerCyclePeriod = p_Param.nsPerCyclePeriod;
-
-    /*	for(int i=0;i<p_Param.motorNum;i++)
-       {
-       m_homePosition[p_Param.driverIDs[i]]=-p_Param.homeOffsets[i];
-       }*/
-
-
     if(CSysBase::initHandler!=NULL)
     {
         CSysBase::initHandler(p_Param);
     }
-
-    //else
-    //if(m_print_SysInitHandler!=NULL)
-    //{
-    //	printf("%s\n",m_print_SysInitHandler);
-    //}
-
-
     //init two RT_CONN_DATA
     InitRT_MSG();
     PrintInfo(CSysBase::print_RT_Message_Initialized);
@@ -218,8 +170,6 @@ int CSysBase::SysInit(Aris::RT_CONTROL::CSysInitParameters p_Param)
         return -1;
     }
     PrintInfo(CSysBase::print_Ethercat_Initialized);
-
-
 
     //Create Log Heap
     if(MAX_LOG_ENTRIES*sizeof(CLogData)<2000000000)
@@ -260,8 +210,6 @@ int CSysBase::SysInit(Aris::RT_CONTROL::CSysInitParameters p_Param)
         printf("Fail to create real-time task, please check your xenomai settings\n");
         return -2;
     }
-
-
     /*
      * Initial setup of m_dataServer
      */
@@ -542,9 +490,7 @@ void CSysBase::PushDatatoMotors()
         //rt_printf("mode of driver from command: %d\n",m_machineDataCore.motorsModes[0]);
     }
 
-    //  rt_printf("Pushdata:command data machine pos:%d\n",m_machineDataCore.commandData[0].Position);
     m_deviceMaster.MachineDataToDeviceData(m_machineDataCore);
-    // rt_printf("Pushdata:command data device pos:%d\n",m_deviceMaster.m_commandData.m_motorData[0].Position);
     m_deviceMaster.DoPID();
 
 }
@@ -575,8 +521,6 @@ Aris::RT_CONTROL::EMachineState CSysBase::GetMachineState()
 
 void CSysBase::RealtimeCore(void* arg)
 {
-    //rt_printf("Realtime Core started.\n");
-
     RTIME timeNow;
     RTIME timePrevious;
     float period;
@@ -593,13 +537,8 @@ void CSysBase::RealtimeCore(void* arg)
     m_cycleCount = 0;
     m_timeStart = rt_timer_read();
 
-    //clear screen
-    // rt_printf("SysMonitor\n");
-
     while (m_machineDataCore.machinestate == Aris::RT_CONTROL::CS_RTTASK_STARTED)
     {
-        // if(m_cycleCount%1==0)
-        //rt_printf("m_cycleCount:%d\n",m_cycleCount);
         rt_task_wait_period(NULL);
         timeNow = rt_timer_read();
 
@@ -607,13 +546,9 @@ void CSysBase::RealtimeCore(void* arg)
         m_deviceMaster.Read();//motors and sensors get data
 
         UploadDatafromMotors();//motor data to machine data
-        // rt_printf("motor 0 mode:%d\n",m_deviceMaster.m_motors[0].GetMotorMode());
 
         ret=RT_RecvDataRaw(CSysBase::m_rtDataRecvBuffer,RT_MSG_BUFFER_SIZE);
 
-
-
-        // memcpy(m_rtDataRecv->GetDataAddress(),m_rtDataRecvBuffer+MSG_HEADER_LENGTH,*(m_rtDataRecvBuffer+4));
 
         if(ret>=0)
         {
@@ -621,24 +556,6 @@ void CSysBase::RealtimeCore(void* arg)
             m_rtDataRecv->SetMsgID(*((int*)(m_rtDataRecvBuffer+4)));
 
             m_rtDataRecv->Copy(m_rtDataRecvBuffer+MSG_HEADER_LENGTH,m_rtDataRecv->GetLength());
-            //  m_rtDataRecv->Copy((int*)(m_rtDataRecvBuffer+MSG_HEADER_LENGTH),m_rtDataRecv->GetLength());
-            //     m_rtDataRecv->SetLength(*((int*)m_rtDataRecvBuffer));
-
-
-            /*int p;
-              p=0;
-              rt_printf("data content %d\n",p);
-
-              m_rtDataRecv->Paste(&p,sizeof(int));
-
-
-
-              rt_printf("data content %d\n",p);
-              rt_printf("data  length  get in rt-core %d\n" ,m_rtDataRecv->GetLength());
-
-              rt_printf("msg id GET IN RT: %d\n" ,m_rtDataRecv ->GetMsgID());*/
-
-
         }
 
         if(ret<0)
@@ -652,67 +569,22 @@ void CSysBase::RealtimeCore(void* arg)
             trajectoryGenerator(m_machineDataCore, *m_rtDataRecv,*m_rtDataSend);
 
         PushDatatoMotors();
-        //machine data to motor data
-
-
-
-        // CSysBase::DoState(m_nextStateRT,m_cycleCount);
-
-        //         rt_printf("%lld %lld :: CMD:%d CW:%d SW:%d AP:%d\tTP:%d  M:%d DIFF %d\n",m_cycleCount,m_h2rStartTimeRUN,
-        //        							CSysBase::m_deviceMaster.m_commandData.m_motorData[0].MotorCmd.command,
-        //        							CSysBase::m_deviceMaster.m_commandData.m_motorData[0].ControlWord,
-        //        							CSysBase::m_deviceMaster.m_feedbackData.m_motorData[0].StatusWord,
-        //        							CSysBase::m_deviceMaster.m_feedbackData.m_motorData[0].Position,
-        //        							CSysBase::m_deviceMaster.m_commandData.m_motorData[0].Position,
-        //        							CSysBase::m_deviceMaster.m_feedbackData.m_motorData[0].Mode,
-        //        							CSysBase::m_deviceMaster.m_feedbackData.m_motorData[0].Position-
-        //        							CSysBase::m_deviceMaster.m_commandData.m_motorData[0].Position
-        //        							);
 
         m_deviceMaster.DCSyncTime(rt_timer_read());
         m_deviceMaster.Write();//motor data write and state machine/mode transition
 
         timePrevious = timeNow;
-
-        //m_logDataRC.time=m_cycleCount;
-        //m_logDataRC.m_machineState=CSysBase::m_machineDataCore.machinestate;
-        ////m_logDataRC.m_servoState=CSysBase::m_machineState;
-        //memcpy(&m_logDataRC.m_feedbackData,&CSysBase::m_deviceMaster.m_feedbackData,
-        //sizeof(CSysBase::m_deviceMaster.m_feedbackData));
-        //memcpy(&m_logDataRC.m_commandData,&CSysBase::m_deviceMaster.m_commandData,
-        //sizeof(CSysBase::m_deviceMaster.m_commandData));
-
         m_logCount++;
-        /*
-         * listening and answering request from xddp_data
-         */
-        //ret = rt_dev_recvfrom(m_xddp_socket_data_rt,&flag,sizeof(flag),MSG_DONTWAIT,NULL,0);
-        //if(flag==FLAG)
-
+        //
         //100HZ to NRT
-
         if(m_cycleCount%10==0)
         {
-
-            /*
-             * Make data should do in DataServer
-             */
-            //RawLogDataToMachineData(m_machineData,m_logDataRC);
-
-            /*
-             * Sent machineData to NRT,this simplified data can be exposed to others
-             */
-            //			int * a = new int();
-            //			delete a;
+            // Make data should do in DataServer
             ret = rt_dev_sendto(m_xddp_socket_data_rt,&m_machineDataCore,sizeof(m_machineDataCore),0,NULL,0);
             if(ret==-12)
             {
                 rt_printf("WARN:Internal communication buffer 2 is full.%lld\n",m_cycleCount);
             }
-
-            //rt_printf("%d\n",ret);
-            //reset flag
-            //flag='D';
         }
 
         m_cycleCount++;
@@ -1017,10 +889,4 @@ void *CSysBase::dataServer(void* arg)
     return 0;
 
 };
-
-
-
-
-
-
 
