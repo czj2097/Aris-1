@@ -1,1 +1,1 @@
-#define PLATFORM_IS_LINUX
+#define PLATFORM_IS_WINDOWS

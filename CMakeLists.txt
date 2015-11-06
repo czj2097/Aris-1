@@ -53,6 +53,9 @@ set(LIBRARY_OUTPUT_PATH lib)
 if(UNIX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif(UNIX)
+if(MINGW)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif(MINGW)
 
 # set dependency include folder
 if(UNIX)
