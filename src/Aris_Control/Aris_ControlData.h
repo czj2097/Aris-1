@@ -154,8 +154,13 @@ namespace Aris
          *
          */
 
+#define RT_MSG_BUFFER_SIZE 8192
+#define RT_MSG_HEADER_LENGTH MSG_HEADER_LENGTH
+#define PRINT_INFO_BUFFER_SIZE 200
+
         class CMachineData
         {
+            const static int CONTROL_DATA_SIZE = 128;
             public:
                 int motorNum;
                 EMachineState machinestate;
@@ -172,11 +177,30 @@ namespace Aris
                 //sensor data
                 CForceData forceData[FORCE_SENSOR_NUMBER];
                 CIMUData   imuData; // only one can be used at CURRENT STAGE
+                // Controller Data
+                char controlData[CONTROL_DATA_SIZE]; // We offer a space to store possible controller data
         };
-#define RT_MSG_BUFFER_SIZE 8192
-#define RT_MSG_HEADER_LENGTH MSG_HEADER_LENGTH
-#define PRINT_INFO_BUFFER_SIZE 200
 
+        // CURRENT STAGE: Used for resolve old log data, will be deleted in the future
+        class CMachineDataLegacy
+        {
+            const static int CONTROL_DATA_SIZE = 128;
+            public:
+                int motorNum;
+                EMachineState machinestate;
+                long long int time;
+                //Motor Data
+                bool isMotorHomed[AXIS_NUMBER];
+                EServoState motorsStates[AXIS_NUMBER];
+                EServoCommand motorsCommands[AXIS_NUMBER];
+                EOperationMode motorsModes[AXIS_NUMBER];
+                EOperationModeDisplay motorsModesDisplay[AXIS_NUMBER];
+                CMotorData feedbackData[AXIS_NUMBER];//currentFeedback,collected after read()
+                CMotorData commandData[AXIS_NUMBER];//lastCommand,collected before write()
+                //sensor data
+                CForceData forceData[FORCE_SENSOR_NUMBER];
+                CIMUData   imuData; // only one can be used at CURRENT STAGE
+        };
     }
 
 }
