@@ -141,6 +141,7 @@ namespace Aris
         class CMachineData
         {
             public:
+                const static int CONTROL_DATA_SIZE = 256;
                 int motorNum;
                 EMachineState machinestate;
 
@@ -157,6 +158,9 @@ namespace Aris
                 CMotorData commandData[AXIS_NUMBER];//lastCommand,collected before write()
                 //sensor data
                 CForceData forceData[FORCE_SENSOR_NUMBER];
+                //custom controller data
+                char controlData[CONTROL_DATA_SIZE];
+
         };
 
         /*
