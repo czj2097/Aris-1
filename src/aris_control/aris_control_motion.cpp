@@ -354,7 +354,13 @@ namespace aris
 			
 			int enable_period{ 0 };
 			std::uint8_t running_mode{ 9 };
+
+            bool is_home_with_switch_ {false};
+            DIYHomingState homing_state_{DIYHomingState::READY};
+            std::int32_t home_start_position_ { 0 };
+            std::int32_t homing_wait_ticks_ { 0 };
 		};
+
 		EthercatMotion::~EthercatMotion() {}
 		EthercatMotion::EthercatMotion(const aris::core::XmlElement &xml_ele, const aris::core::XmlElement &type_xml_ele) 
 			:EthercatSlave(type_xml_ele), imp_(new EthercatMotion::Imp(this))
@@ -405,12 +411,20 @@ namespace aris
 
             // Assign specific home mode for different types of motors if necessary
             int32_t hm_mode;
+            int32_t hm_with_sw;
 			if (xml_ele.QueryIntAttribute("sp_hm_mode", &hm_mode) == tinyxml2::XML_NO_ERROR)
 			{
                 imp_->home_mode_ = hm_mode;
                 configSdo(0, static_cast<std::int8_t>(imp_->home_mode_));
                 printf("Motor %d's home mode has been set to %d\n", imp_->phy_id_, imp_->home_mode_);
 			}
+            else if (xml_ele.QueryIntAttribute("hm_with_switch", &hm_with_sw) == tinyxml2::XML_NO_ERROR)
+            {
+                if (hm_with_sw) {
+                    imp_->is_home_with_switch_ = true;
+                    printf("Motor %d's home mode has been set to home with switch (DIY mode)", imp_->phy_id_);
+                }
+            }
 
 			configSdo(9, static_cast<std::int32_t>(-imp_->home_count_));
 		};
@@ -480,6 +494,26 @@ namespace aris
 		{
 			return imp_->pos_offset_;
 		}
+
+        auto EthercatMotion::is_home_with_switch() const -> bool
+        {
+            return imp_->is_home_with_switch_;
+        }
+
+        auto EthercatMotion::homing_state() -> EthercatMotion::DIYHomingState&
+        {
+            return imp_->homing_state_;
+        }
+
+        auto EthercatMotion::home_start_position() -> std::int32_t&
+        {
+            return imp_->home_start_position_;
+        }
+
+        auto EthercatMotion::homing_wait_ticks() -> std::int32_t&
+        {
+            return imp_->homing_wait_ticks_;
+        }
 
 		EthercatForceSensor::EthercatForceSensor(const aris::core::XmlElement &xml_ele, const aris::core::XmlElement &type_xml_ele) : EthercatSlave(type_xml_ele)
 		{
@@ -712,10 +746,10 @@ namespace aris
                     if (count % 50 == 0) // We send data report to client at 20Hz
                     {
                         ret=this->system_data_emitter.sendto_udp(&data_emitted,sizeof(data_emitted));
-                    }
-                    if(ret<0)
-                    {
-                        printf("Error in sendto_udp.\n");
+                        if(ret<0)
+                        {
+                            //printf("Error in sendto_udp.\n");
+                        }
                     }
 
 

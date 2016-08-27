@@ -424,6 +424,7 @@ namespace aris
 			auto enable(const BasicFunctionParam &param, aris::control::EthercatController::Data &data)->int;
 			auto disable(const BasicFunctionParam &param, aris::control::EthercatController::Data &data)->int;
 			auto home(const BasicFunctionParam &param, aris::control::EthercatController::Data &data)->int;
+			auto home_with_hmswitch(const BasicFunctionParam &param, aris::control::EthercatController::Data &data)->int;
 			auto fake_home(const BasicFunctionParam &param, aris::control::EthercatController::Data &data)->int;
 			auto zero_force(const BasicFunctionParam &param, aris::control::EthercatController::Data &data)->int;
 
@@ -1189,6 +1190,84 @@ namespace aris
 
 			return is_all_homed ? 0 : 1;
 		};
+        
+        auto ControlServer::Imp::home_with_hmswitch(const BasicFunctionParam &param, aris::control::EthercatController::Data &data)->int
+        {
+            using control::EthercatMotion;
+            bool is_all_homed = true;
+
+            for (std::size_t i = 0; i < controller_->motionNum(); ++i)
+            {
+                if (param.active_motor[i] && controller_->motionAtAbs(i).is_home_with_switch())
+                {
+                    if (param.count == 0)
+                    {
+                        rt_printf("Motor %d DIY homing started\n", i);
+                        controller_->motionAtAbs(i).setPosOffset(0);
+                        controller_->motionAtAbs(i).homing_state() = EthercatMotion::DIYHomingState::HOMING;
+
+                        controller_->motionAtAbs(i).home_start_position() =
+                            data.motion_raw_data->operator[](i).feedback_pos;
+
+                        data.motion_raw_data->operator[](i).cmd = aris::control::EthercatMotion::RUN;
+                        data.motion_raw_data->operator[](i).target_pos = 
+                            controller_->motionAtAbs(i).home_start_position();
+
+                        is_all_homed = false;
+                    }
+                    else if (controller_->motionAtAbs(i).homing_state() == EthercatMotion::DIYHomingState::HOMING)
+                    {
+                        data.motion_raw_data->operator[](i).cmd = aris::control::EthercatMotion::RUN;
+                        data.motion_raw_data->operator[](i).target_pos = 
+                            controller_->motionAtAbs(i).home_start_position() + param.count * 5;
+                        
+                        is_all_homed = false;
+
+                        if (data.motion_raw_data->operator[](i).is_home_switch_on())
+                        {
+                            controller_->motionAtAbs(i).homing_state() = EthercatMotion::DIYHomingState::HOMED;
+                            controller_->motionAtAbs(i).homing_wait_ticks() = 20;
+                            rt_printf("Motor %d DIY home switch is on\n", i);
+                        }
+                    }
+                    else if (controller_->motionAtAbs(i).homing_state() == EthercatMotion::DIYHomingState::HOMED)
+                    {
+                        data.motion_raw_data->operator[](i).cmd = aris::control::EthercatMotion::DISABLE;
+                        controller_->motionAtAbs(i).homing_wait_ticks() --;
+
+                        if (controller_->motionAtAbs(i).homing_wait_ticks() <= 0)
+                        {
+                            // we assume after 20 cycles the motor should have been disabled
+                            controller_->motionAtAbs(i).homing_state() = EthercatMotion::DIYHomingState::RESTORE;
+
+                            controller_->motionAtAbs(i).setPosOffset(
+                                    static_cast<std::int32_t>(controller_->motionAtAbs(i).posOffset() +
+                                        model_->motionPool().at(i).motPos()*controller_->motionAtAbs(i).pos2countRatio()
+                                        - data.motion_raw_data->at(i).feedback_pos
+                                        ));
+                            controller_->motionAtAbs(i).homing_wait_ticks() = 1;
+                        }
+                        is_all_homed = false;
+                    }
+                    else if (controller_->motionAtAbs(i).homing_state() == EthercatMotion::DIYHomingState::RESTORE)
+                    {
+                        if (controller_->motionAtAbs(i).homing_wait_ticks() == 1)
+                        {
+                            controller_->motionAtAbs(i).home_start_position() =
+                                data.motion_raw_data->operator[](i).feedback_pos;
+
+                            controller_->motionAtAbs(i).homing_wait_ticks() --;
+                        }
+                        data.motion_raw_data->operator[](i).cmd = aris::control::EthercatMotion::RUN;
+                        data.motion_raw_data->operator[](i).target_pos = 
+                            controller_->motionAtAbs(i).home_start_position();
+                    }
+                }
+            }
+
+            return is_all_homed ? 0 : 1;
+        };
+
 		auto ControlServer::Imp::fake_home(const BasicFunctionParam &param, aris::control::EthercatController::Data &data)->int
 		{
 			for (std::size_t i = 0; i < model_->motionPool().size(); ++i)
@@ -1421,11 +1500,4 @@ namespace aris
 
     }
 }
-
-
-
-
-
-
-
 
